@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Availability Results</title>
+<style>
+  :root{--navy:#1a2744;--navy2:#243358;--green:#22c55e;--amber:#f59e0b;--red:#ef4444}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#eef2ff;color:#1e2a40;min-height:100vh}
+
+  header{background:var(--navy);color:white;padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  header h1{font-size:1.2rem;font-weight:800}
+  .select-wrap{position:relative;flex:1;min-width:180px;max-width:280px}
+  .select-wrap select{width:100%;appearance:none;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25);border-radius:10px;color:white;font-size:.9rem;font-weight:600;padding:8px 36px 8px 14px;cursor:pointer;outline:none}
+  .select-wrap select:focus{border-color:rgba(255,255,255,.6)}
+  .select-wrap select option{background:#1a2744;color:white}
+  .select-wrap::after{content:'▾';position:absolute;right:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.6);pointer-events:none}
+  .header-actions{display:flex;gap:8px;margin-left:auto}
+  .hbtn{background:rgba(255,255,255,.12);border:none;color:white;padding:7px 14px;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap}
+  .hbtn:hover{background:rgba(255,255,255,.22)}
+
+  .toolbar{background:var(--navy2);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .toolbar label{color:#94a3c0;font-size:.8rem;font-weight:600}
+  #threshold{accent-color:var(--amber);width:100px}
+  #threshold-val{color:white;font-weight:700;font-size:.85rem;min-width:20px}
+
+  .status{padding:9px 20px;font-size:.8rem;color:#7080a0;background:#f8fafc;border-bottom:1px solid #e5e9f5}
+
+  /* Manage panel */
+  .manage-panel{display:none;background:#fff;border-bottom:2px solid #e5e9f5;padding:16px 20px}
+  .manage-panel.open{display:block}
+  .manage-panel h2{font-size:.85rem;font-weight:800;color:var(--navy);margin-bottom:12px}
+  .poll-list{display:flex;flex-wrap:wrap;gap:8px}
+  .poll-chip{display:flex;align-items:center;gap:6px;background:#eef2ff;border:2px solid #dde4f2;border-radius:20px;padding:5px 10px 5px 14px;font-size:.8rem;font-weight:700;color:#1e2a40}
+  .poll-chip .del-btn{background:#fee2e2;border:none;color:var(--red);border-radius:50%;width:20px;height:20px;font-size:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0}
+  .poll-chip .del-btn:hover{background:var(--red);color:white}
+  .manage-note{font-size:.75rem;color:#94a3b8;margin-top:10px}
+
+  /* Confirm overlay */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+  .overlay.open{display:flex}
+  .confirm-box{background:white;border-radius:14px;padding:24px;max-width:340px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .confirm-box h3{font-size:1rem;margin-bottom:8px;color:var(--navy)}
+  .confirm-box p{font-size:.85rem;color:#6080a0;margin-bottom:20px}
+  .confirm-btns{display:flex;gap:10px;justify-content:center}
+  .confirm-btns button{padding:9px 22px;border-radius:9px;border:none;font-weight:700;font-size:.85rem;cursor:pointer}
+  .btn-cancel{background:#eef2ff;color:#1e2a40}
+  .btn-delete{background:var(--red);color:white}
+
+  .container{padding:16px 14px;max-width:1400px;margin:0 auto}
+
+  /* Summary cards */
+  .summary-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px}
+  .sum-card{background:white;border-radius:10px;padding:14px 16px;border:2px solid #e5e9f5;text-align:center}
+  .sum-card .num{font-size:2rem;font-weight:900;line-height:1}
+  .sum-card .lbl{font-size:.7rem;color:#7080a0;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+  .sum-card.highlight{border-color:var(--green)}
+  .sum-card.highlight .num{color:var(--green)}
+
+  /* Best banner */
+  .best-banner{background:linear-gradient(135deg,var(--navy),var(--navy2));color:white;border-radius:12px;padding:16px 18px;margin-bottom:18px}
+  .best-banner h2{font-size:.85rem;font-weight:800;margin-bottom:10px;opacity:.75}
+  .best-dates{display:flex;flex-wrap:wrap;gap:8px}
+  .best-chip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:5px 12px;font-size:.78rem;font-weight:700;line-height:1.3;white-space:nowrap}
+  .best-chip.perfect{background:var(--green);border-color:var(--green)}
+  .best-chip .chip-slot{opacity:.75;font-weight:600;font-size:.72rem}
+  .best-chip .chip-count{opacity:.65;font-size:.7rem}
+
+  /* Month sections */
+  .month-section{margin-bottom:20px}
+  .month-title{font-size:.82rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;padding:5px 0 7px;border-bottom:2px solid var(--navy);margin-bottom:10px}
+  .dates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:8px}
+  .date-card{border-radius:10px;border:2px solid #dde4f2;background:white;overflow:hidden}
+  .date-card.full{border-color:var(--green);box-shadow:0 0 0 2px rgba(34,197,94,.18)}
+  .date-card.partial{border-color:var(--amber)}
+  .date-card.low{opacity:.45}
+  .card-top{padding:8px 10px 5px;display:flex;justify-content:space-between;align-items:flex-start}
+  .card-label{font-size:.82rem;font-weight:900;color:#1e2a40}
+  .card-count{font-size:.67rem;font-weight:800;padding:2px 7px;border-radius:10px;white-space:nowrap}
+  .card-count.all{background:#dcfce7;color:#14532d}
+  .card-count.most{background:#fef9c3;color:#854d0e}
+  .card-count.some{background:#fee2e2;color:#991b1b}
+  .card-count.zero{background:#f1f5f9;color:#94a3b8}
+  .member-dots{padding:3px 10px 8px;display:flex;flex-wrap:wrap;gap:4px}
+  .mdot{font-size:.63rem;font-weight:700;padding:2px 6px;border-radius:6px;white-space:nowrap}
+  .mdot.avail{background:var(--green);color:white}
+  .mdot.unavail{background:#e5e9f5;color:#94a3b8}
+  .mslot{font-size:.58rem;font-weight:700;opacity:.85;margin-left:2px}
+
+  .empty{text-align:center;padding:60px 20px;color:#94a3b8}
+  .empty h2{font-size:1.1rem;margin-bottom:8px}
+  .spinner{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Availability Results</h1>
+  <div class="select-wrap">
+    <select id="proj-select" onchange="onSelectChange()">
+      <option value="">Loading polls…</option>
+    </select>
+  </div>
+  <div class="header-actions">
+    <button class="hbtn" onclick="loadProjects()" title="Refresh poll list">↺ Refresh</button>
+    <button class="hbtn" id="manage-btn" onclick="toggleManage()" style="display:none">Manage</button>
+  </div>
+</header>
+
+<!-- Manage panel -->
+<div class="manage-panel" id="manage-panel">
+  <h2>Remove a poll</h2>
+  <div class="poll-list" id="poll-list"></div>
+  <p class="manage-note">Removing a poll deletes its response tab from the Google Sheet permanently.</p>
+</div>
+
+<div class="toolbar" id="toolbar" style="display:none">
+  <label>Show dates where at least</label>
+  <input type="range" id="threshold" min="1" max="10" value="4" step="1" oninput="onThreshold()">
+  <span id="threshold-val">4</span>
+  <label> members available</label>
+</div>
+
+<div class="status" id="status">Loading polls…</div>
+
+<div class="container" id="container">
+  <div class="empty"><h2>Select a poll above to see results.</h2></div>
+</div>
+
+<!-- Confirm delete overlay -->
+<div class="overlay" id="overlay">
+  <div class="confirm-box">
+    <h3>Delete poll?</h3>
+    <p id="confirm-msg"></p>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyVThgmyd0byozws-o8QsLnAjNT9ENOUzAsraRPOOiwG1Je11594NpUgFIj7fnVJxS/exec';
+
+let allProjects    = [];
+let currentProject = null;
+let currentData    = null;
+let threshold      = 4;
+let pendingDelete  = null;
+
+function parseLabel(h) {
+  if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(h)) return h;
+  if (h.includes('T')) {
+    const d = new Date(h);
+    if (!isNaN(d)) return `${d.getUTCMonth()+1}/${d.getUTCDate()}/${String(d.getUTCFullYear()).slice(2)}`;
+  }
+  const months = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+  const parts = h.split(' ');
+  if (parts.length >= 3 && months[parts[1]]) {
+    return `${months[parts[1]]}/${parts[2]}/26`;
+  }
+  return h;
+}
+
+function getMonth(label) {
+  const norm = parseLabel(label);
+  const parts = norm.split('/');
+  if (parts.length === 3) {
+    const mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return mNames[parseInt(parts[0]) - 1] || 'Unknown';
+  }
+  return label.split(' ')[1] || 'Unknown';
+}
+
+function topSlot(label, dateMap, members) {
+  const counts = {};
+  members.forEach(m => {
+    const val = dateMap[label][m];
+    if (!val) return;
+    val.split('+').forEach(s => { counts[s] = (counts[s]||0) + 1; });
+  });
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  return sorted.length ? sorted[0][0] : '';
+}
+
+function isAvail(val) { return val && val !== ''; }
+
+function abbrevSlot(s) {
+  if (!s) return '';
+  const map = {'All Day':'All','Evening':'Eve','Midday':'Mid','AM':'AM'};
+  return s.split(', ').map(p => map[p.trim()] || p.trim()).join('+');
+}
+
+window.addEventListener('DOMContentLoaded', loadProjects);
+
+async function loadProjects() {
+  const sel = document.getElementById('proj-select');
+  sel.innerHTML = '<option value="">Loading…</option>';
+  document.getElementById('status').textContent = 'Fetching poll list…';
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=list`);
+    const json = await res.json();
+    if (json.status === 'error') throw new Error(json.message);
+
+    allProjects = json.projects || [];
+    sel.innerHTML = '<option value="">— select a poll —</option>' +
+      allProjects.map(p => `<option value="${p}"${p===currentProject?' selected':''}>${p}</option>`).join('');
+
+    document.getElementById('manage-btn').style.display = allProjects.length ? '' : 'none';
+    rebuildManageList();
+
+    if (currentProject && allProjects.includes(currentProject)) {
+      document.getElementById('status').textContent = 'Poll list refreshed.';
+    } else {
+      currentProject = null;
+      document.getElementById('toolbar').style.display = 'none';
+      document.getElementById('container').innerHTML =
+        '<div class="empty"><h2>Select a poll above to see results.</h2></div>';
+      document.getElementById('status').textContent = `${allProjects.length} poll${allProjects.length!==1?'s':''} available.`;
+    }
+  } catch (err) {
+    sel.innerHTML = '<option value="">Error loading</option>';
+    document.getElementById('status').textContent = 'Could not load poll list — check Apps Script is v5.';
+  }
+}
+
+function onSelectChange() {
+  const val = document.getElementById('proj-select').value;
+  if (!val) return;
+  currentProject = val;
+  loadData();
+}
+
+function toggleManage() {
+  const panel = document.getElementById('manage-panel');
+  const btn   = document.getElementById('manage-btn');
+  const open  = panel.classList.toggle('open');
+  btn.textContent = open ? 'Done' : 'Manage';
+}
+
+function rebuildManageList() {
+  document.getElementById('poll-list').innerHTML = allProjects.map(p =>
+    `<div class="poll-chip">
+      ${p}
+      <button class="del-btn" onclick="askDelete('${p.replace(/'/g,"\\'")}')">✕</button>
+    </div>`
+  ).join('') || '<span style="color:#94a3b8;font-size:.82rem">No polls yet.</span>';
+}
+
+function askDelete(name) {
+  pendingDelete = name;
+  document.getElementById('confirm-msg').textContent =
+    `"${name}" and all its responses will be permanently deleted. This cannot be undone.`;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeConfirm() {
+  pendingDelete = null;
+  document.getElementById('overlay').classList.remove('open');
+}
+async function confirmDelete() {
+  if (!pendingDelete) return;
+  const name = pendingDelete;
+  closeConfirm();
+  document.getElementById('status').textContent = `Deleting "${name}"…`;
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=delete&project=${encodeURIComponent(name)}`);
+    const json = await res.json();
+    if (json.status === 'error') throw new Error(json.message);
+    if (currentProject === name) {
+      currentProject = null;
+      document.getElementById('container').innerHTML =
+        '<div class="empty"><h2>Poll deleted.</h2></div>';
+      document.getElementById('toolbar').style.display = 'none';
+    }
+    await loadProjects();
+    document.getElementById('status').textContent = `"${name}" deleted.`;
+  } catch (err) {
+    document.getElementById('status').textContent = 'Delete failed: ' + err.message;
+  }
+}
+
+async function loadData() {
+  if (!currentProject) return;
+  document.getElementById('status').innerHTML = '<span class="spinner"></span>Loading…';
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=results&project=${encodeURIComponent(currentProject)}`);
+    const json = await res.json();
+    if (json.status === 'error') throw new Error(json.message);
+    currentData = json;
+
+    if (json.rows && json.rows.length > 0) {
+      const n = json.rows.length;
+      threshold = Math.max(1, n - 1);
+      const sl = document.getElementById('threshold');
+      sl.max   = n;
+      sl.value = threshold;
+      document.getElementById('threshold-val').textContent = threshold;
+    }
+    document.getElementById('toolbar').style.display = '';
+    render(json);
+  } catch (err) {
+    document.getElementById('status').textContent = 'Failed to load: ' + err.message;
+  }
+}
+
+function onThreshold() {
+  threshold = +document.getElementById('threshold').value;
+  document.getElementById('threshold-val').textContent = threshold;
+  if (currentData) render(currentData);
+}
+
+function render(data) {
+  const members = data.rows.map(r => r.member);
+  const headers = data.headers;
+
+  if (!members.length || !headers.length) {
+    document.getElementById('status').textContent = `${currentProject} — no submissions yet.`;
+    document.getElementById('container').innerHTML =
+      '<div class="empty"><h2>No responses yet.</h2><p>Share the poll so people can submit.</p></div>';
+    return;
+  }
+
+  const dateMap = {};
+  headers.forEach(h => { dateMap[h] = {}; });
+  data.rows.forEach(row => {
+    headers.forEach(h => {
+      dateMap[h][row.member] = row.availability[h] || '';
+    });
+  });
+
+  const dateCounts = headers.map(h => ({
+    raw:     h,
+    label:   parseLabel(h),
+    count:   members.filter(m => isAvail(dateMap[h][m])).length,
+    members: members.map(m => ({ name: m, avail: isAvail(dateMap[h][m]), slot: dateMap[h][m] || '' }))
+  }));
+
+  const perfect = dateCounts.filter(d => d.count === members.length);
+  const above   = dateCounts.filter(d => d.count >= threshold);
+
+  document.getElementById('status').textContent =
+    `${currentProject} · ${members.length} response${members.length!==1?'s':''} · ` +
+    `${above.length} date${above.length!==1?'s':''} with ≥${threshold} available · ` +
+    `${perfect.length} with everyone free`;
+
+  const summaryHTML = `<div class="summary-row">
+    <div class="sum-card"><div class="num">${members.length}</div><div class="lbl">Responses</div></div>
+    <div class="sum-card highlight"><div class="num">${perfect.length}</div><div class="lbl">Everyone free</div></div>
+    <div class="sum-card"><div class="num">${above.length}</div><div class="lbl">≥${threshold} available</div></div>
+    <div class="sum-card"><div class="num">${headers.length}</div><div class="lbl">Total dates</div></div>
+  </div>`;
+
+  const sorted = [...dateCounts].sort((a,b) => b.count - a.count);
+  const top = sorted.filter(d => d.count > 0).slice(0, 10);
+  const bestChips = top.map(d => {
+    const slot = topSlot(d.raw, dateMap, members);
+    const slotLabel = slot ? ` <span class="chip-slot">· ${slot}</span>` : '';
+    const countLabel = ` <span class="chip-count">${d.count}/${members.length}</span>`;
+    return `<span class="best-chip${d.count===members.length?' perfect':''}">${d.label}${slotLabel}${countLabel}</span>`;
+  }).join('');
+  const bannerHTML = `<div class="best-banner">
+    <h2>🏆 Best dates</h2>
+    <div class="best-dates">${top.length ? bestChips : '<span style="opacity:.5;font-size:.8rem">No availability yet</span>'}</div>
+  </div>`;
+
+  const months = [...new Set(dateCounts.map(d => getMonth(d.raw)))];
+  const monthsHTML = months.map(month => {
+    const cards = dateCounts.filter(d => getMonth(d.raw) === month).map(d => {
+      const pct       = d.count / members.length;
+      const cardClass = pct === 1 ? 'full' : pct >= 0.5 ? 'partial' : 'low';
+      const ccls      = pct === 1 ? 'all' : d.count >= threshold ? 'most' : d.count > 0 ? 'some' : 'zero';
+      return `<div class="date-card ${cardClass}">
+        <div class="card-top">
+          <div class="card-label">${d.label}</div>
+          <span class="card-count ${ccls}">${d.count===0?'none':d.count+'/'+members.length}</span>
+        </div>
+        <div class="member-dots">${d.members.map(m =>
+          `<span class="mdot ${m.avail?'avail':'unavail'}" title="${m.name}${m.slot?' — '+m.slot:''}">${m.name.charAt(0)}${m.avail && m.slot?`<span class="mslot">${abbrevSlot(m.slot)}</span>`:''}</span>`
+        ).join('')}</div>
+      </div>`;
+    }).join('');
+    return `<div class="month-section"><div class="month-title">${month}</div><div class="dates-grid">${cards}</div></div>`;
+  }).join('');
+
+  document.getElementById('container').innerHTML = summaryHTML + bannerHTML + monthsHTML;
+}
+</script>
+</body>
+</html>
