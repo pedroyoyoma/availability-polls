@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Availability Poll</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; padding-bottom: 2rem; }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 1.25rem 1rem 1rem; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,.3); }
+    .header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: .02em; }
+    .header p  { font-size: .75rem; opacity: .7; margin-top: .25rem; }
+    .legend { display: flex; flex-wrap: wrap; gap: .5rem .75rem; justify-content: center; background: #fff; padding: .6rem 1rem; border-bottom: 1px solid #e2e6ea; font-size: .7rem; color: #555; }
+    .legend-item { display: flex; align-items: center; gap: .3rem; }
+    .swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .swatch-morning { background: #f59e0b; } .swatch-evening { background: #6366f1; }
+    .swatch-am { background: #3b82f6; } .swatch-mid { background: #10b981; } .swatch-eve { background: #8b5cf6; }
+    .name-bar { display: flex; align-items: center; gap: .6rem; padding: .75rem 1rem; background: #fff; border-bottom: 1px solid #e2e6ea; position: sticky; top: 72px; z-index: 99; }
+    .name-bar label { font-size: .8rem; font-weight: 600; white-space: nowrap; color: #444; }
+    .name-bar select { flex: 1; padding: .45rem .6rem; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: .85rem; background: #fff; color: #1a1a2e; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .6rem center; cursor: pointer; }
+    .name-bar select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; flex-shrink: 0; transition: background .3s; }
+    .status-dot.ready { background: #10b981; }
+    .prompt { text-align: center; padding: 2rem 1rem; color: #888; font-size: .85rem; }
+    .month-section { padding: .75rem 1rem .25rem; }
+    .month-header { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .6rem; }
+    .month-name { font-size: 1rem; font-weight: 700; color: #1a1a2e; text-transform: uppercase; letter-spacing: .06em; }
+    .month-count { font-size: .7rem; color: #888; font-weight: 500; }
+    .date-card { background: #fff; border-radius: 12px; margin-bottom: .6rem; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); border-left: 4px solid #e2e6ea; }
+    .date-card.morning-pref { border-left-color: #f59e0b; } .date-card.evening-pref { border-left-color: #6366f1; }
+    .card-head { display: flex; align-items: center; padding: .55rem .75rem .45rem; gap: .6rem; }
+    .day-badge { font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #888; min-width: 28px; }
+    .date-label { font-size: .85rem; font-weight: 600; color: #1a1a2e; flex: 1; }
+    .pref-icon { font-size: .8rem; }
+    .note-badge { font-size: .65rem; background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; border-radius: 99px; padding: .1rem .45rem; font-weight: 600; white-space: nowrap; }
+    .card-body { padding: .4rem .75rem .6rem; display: flex; flex-wrap: wrap; gap: .4rem; }
+    .weekday-label { font-size: .7rem; color: #999; text-transform: uppercase; letter-spacing: .06em; align-self: center; margin-right: .2rem; }
+    .slot-btn { padding: .35rem .7rem; border-radius: 8px; border: 1.5px solid #e2e6ea; background: #f8f9fa; font-size: .75rem; font-weight: 600; color: #555; cursor: pointer; transition: all .15s; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .slot-btn:active { transform: scale(.96); }
+    .slot-btn[data-slot="AM"].active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+    .slot-btn[data-slot="Midday"].active { background: #10b981; border-color: #10b981; color: #fff; }
+    .slot-btn[data-slot="Evening"].active { background: #8b5cf6; border-color: #8b5cf6; color: #fff; }
+    .slot-btn[data-slot="All Day"].active { background: #1a1a2e; border-color: #1a1a2e; color: #fff; }
+    .actions { padding: 1.25rem 1rem .5rem; display: flex; gap: .75rem; }
+    .btn-submit { flex: 1; padding: .75rem; border-radius: 12px; border: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; letter-spacing: .02em; transition: opacity .2s, transform .1s; }
+    .btn-submit:hover { opacity: .9; } .btn-submit:active { transform: scale(.98); } .btn-submit:disabled { opacity: .45; cursor: default; }
+    .btn-clear { padding: .75rem 1.1rem; border-radius: 12px; border: 1.5px solid #e2e6ea; background: #fff; color: #666; font-size: .85rem; font-weight: 600; cursor: pointer; }
+    .btn-clear:hover { background: #f8f9fa; }
+    .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1a1a2e; color: #fff; padding: .7rem 1.4rem; border-radius: 99px; font-size: .85rem; font-weight: 600; transition: transform .3s cubic-bezier(.34,1.56,.64,1); z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,.25); }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #10b981; } .toast.error { background: #ef4444; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+// ███████████████████████████████████████████████████████████████████
+// CONFIG — edit only this block
+// ███████████████████████████████████████████████████████████████████
+const CONFIG = {
+  title:      "Band Practice Poll — 2026",
+  subtitle:   "Select your name · tap your available slots · submit",
+  storageKey: "bandPoll_2026_v3",
+  project:    "Sore Thumb",
+  members:    ["Peter","Josh","Matt","Cory","Tahm"],
+  scriptUrl:  "https://script.google.com/macros/s/AKfycbxyVThgmyd0byozws-o8QsLnAjNT9ENOUzAsraRPOOiwG1Je11594NpUgFIj7fnVJxS/exec",
+  dates: [
+    {"iso":"2026-06-23","label":"Tue Jun 23","month":"Jun","weekend":false,"preferred":"evening"},
+    {"iso":"2026-06-28","label":"Sun Jun 28","month":"Jun","weekend":true,"preferred":"morning"},
+    {"iso":"2026-06-30","label":"Tue Jun 30","month":"Jun","weekend":false,"preferred":"evening"},
+    {"iso":"2026-07-04","label":"Sat Jul 4","month":"Jul","weekend":true,"preferred":"morning"},
+    {"iso":"2026-07-05","label":"Sun Jul 5","month":"Jul","weekend":true,"preferred":"morning"},
+    {"iso":"2026-07-07","label":"Tue Jul 7","month":"Jul","weekend":false,"preferred":"evening"},
+    {"iso":"2026-07-10","label":"Fri Jul 10","month":"Jul","weekend":false,"preferred":"evening"},
+    {"iso":"2026-07-11","label":"Sat Jul 11","month":"Jul","weekend":true,"preferred":"morning"},
+    {"iso":"2026-07-12","label":"Sun Jul 12","month":"Jul","weekend":true,"preferred":"morning"},
+    {"iso":"2026-07-17","label":"Fri Jul 17","month":"Jul","weekend":false,"preferred":"evening","note":"after 8pm"},
+    {"iso":"2026-07-18","label":"Sat Jul 18","month":"Jul","weekend":true,"preferred":"morning"},
+    {"iso":"2026-07-19","label":"Sun Jul 19","month":"Jul","weekend":true,"preferred":"morning"},
+    {"iso":"2026-07-24","label":"Fri Jul 24","month":"Jul","weekend":false,"preferred":"evening"},
+    {"iso":"2026-07-25","label":"Sat Jul 25","month":"Jul","weekend":true,"preferred":"morning"},
+    {"iso":"2026-07-28","label":"Tue Jul 28","month":"Jul","weekend":false,"preferred":"evening"},
+    {"iso":"2026-07-31","label":"Fri Jul 31","month":"Jul","weekend":false,"preferred":"evening"},
+    {"iso":"2026-08-04","label":"Tue Aug 4","month":"Aug","weekend":false,"preferred":"evening"},
+    {"iso":"2026-08-09","label":"Sun Aug 9","month":"Aug","weekend":true,"preferred":"morning"},
+    {"iso":"2026-08-11","label":"Tue Aug 11","month":"Aug","weekend":false,"preferred":"evening"},
+    {"iso":"2026-08-15","label":"Sat Aug 15","month":"Aug","weekend":true,"preferred":"morning"},
+    {"iso":"2026-08-16","label":"Sun Aug 16","month":"Aug","weekend":true,"preferred":"morning"},
+    {"iso":"2026-08-18","label":"Tue Aug 18","month":"Aug","weekend":false,"preferred":"evening"},
+    {"iso":"2026-08-21","label":"Fri Aug 21","month":"Aug","weekend":false,"preferred":"evening"},
+    {"iso":"2026-08-22","label":"Sat Aug 22","month":"Aug","weekend":true,"preferred":"morning"},
+    {"iso":"2026-08-23","label":"Sun Aug 23","month":"Aug","weekend":true,"preferred":"morning"},
+    {"iso":"2026-08-28","label":"Fri Aug 28","month":"Aug","weekend":false,"preferred":"evening"},
+    {"iso":"2026-08-29","label":"Sat Aug 29","month":"Aug","weekend":true,"preferred":"morning"},
+    {"iso":"2026-08-30","label":"Sun Aug 30","month":"Aug","weekend":true,"preferred":"morning"}
+  ]
+};
+// ███████████████████████████████████████████████████████████████████
+// END CONFIG
+// ███████████████████████████████████████████████████████████████████
+let currentMember="",selections={};
+function loadSelections(){try{const r=localStorage.getItem(CONFIG.storageKey);selections=r?JSON.parse(r):{};}catch{selections={};}}
+function saveSelections(){try{localStorage.setItem(CONFIG.storageKey,JSON.stringify(selections));}catch{}}
+function getKey(iso){return currentMember+"|"+iso;}
+function getSlots(iso){return selections[getKey(iso)]||[];}
+function toggleSlot(iso,slot){const k=getKey(iso),c=selections[k]||[];selections[k]=c.includes(slot)?c.filter(s=>s!==slot):[...c,slot];if(!selections[k].length)delete selections[k];saveSelections();}
+function render(){
+  const app=document.getElementById("app"),months={},mo=[];
+  for(const d of CONFIG.dates){if(!months[d.month]){months[d.month]=[];mo.push(d.month);}months[d.month].push(d);}
+  let h=`<div class="header"><h1>${CONFIG.title}</h1><p>${CONFIG.subtitle}</p></div>
+  <div class="legend"><div class="legend-item"><div class="swatch swatch-morning"></div>Morning pref.</div><div class="legend-item"><div class="swatch swatch-evening"></div>Evening pref.</div><div class="legend-item"><div class="swatch swatch-am"></div>AM</div><div class="legend-item"><div class="swatch swatch-mid"></div>Midday</div><div class="legend-item"><div class="swatch swatch-eve"></div>Evening</div></div>
+  <div class="name-bar"><label for="ns">Name:</label><select id="ns" onchange="onNameChange(this.value)"><option value="">— Select —</option>${CONFIG.members.map(m=>`<option value="${m}"${m===currentMember?" selected":""}>${m}</option>`).join("")}</select><div class="status-dot${currentMember?" ready":""}"></div></div>`;
+  if(!currentMember){h+=`<div class="prompt">Select your name to begin</div>`;}
+  else{
+    for(const month of mo){const dates=months[month];h+=`<div class="month-section"><div class="month-header"><span class="month-name">${month}</span><span class="month-count">${dates.length}</span></div>`;
+      for(const d of dates){const slots=getSlots(d.iso),pc=d.preferred==="morning"?"morning-pref":"evening-pref",dow=new Date(d.iso+"T12:00:00").toLocaleDateString("en-US",{weekday:"short"}).toUpperCase();
+        h+=`<div class="date-card ${pc}"><div class="card-head"><span class="day-badge">${dow}</span><span class="date-label">${d.label}${d.preferred==="morning"?' <span class="pref-icon">&#9728;</span>':""}</span>${d.note?`<span class="note-badge">${d.note}</span>`:""}</div><div class="card-body">`;
+        if(d.weekend){for(const s of["AM","Midday","Evening","All Day"])h+=`<button class="slot-btn${slots.includes(s)?" active":""}" data-slot="${s}" data-iso="${d.iso}" onclick="onSlot('${d.iso}','${s}')">${s}</button>`;}
+        else{h+=`<span class="weekday-label">Weekday</span><button class="slot-btn${slots.includes("Evening")?" active":""}" data-slot="Evening" data-iso="${d.iso}" onclick="onSlot('${d.iso}','Evening')">Eve</button>`;}
+        h+=`</div></div>`;}h+=`</div>`;}
+    h+=`<div class="actions"><button class="btn-submit" onclick="onSubmit()">Submit My Availability</button><button class="btn-clear" onclick="onClear()">Clear</button></div>`;
+  }
+  app.innerHTML=h;
+}
+function onNameChange(v){currentMember=v;render();}
+function onSlot(iso,slot){
+  if(!currentMember)return;
+  const k=getKey(iso),curr=selections[k]||[];
+  if(slot==="All Day"){if(!curr.includes("All Day"))selections[k]=[];}
+  else{if(!curr.includes(slot))selections[k]=curr.filter(s=>s!=="All Day");}
+  toggleSlot(iso,slot);
+  document.querySelectorAll(`[data-iso="${iso}"]`).forEach(b=>b.classList.toggle("active",getSlots(iso).includes(b.dataset.slot)));
+}
+function onClear(){if(!currentMember)return;CONFIG.dates.forEach(d=>delete selections[getKey(d.iso)]);saveSelections();render();}
+async function onSubmit(){
+  if(!currentMember){showToast("Please select your name first","error");return;}
+  const availability={};
+  CONFIG.dates.forEach(d=>{const s=getSlots(d.iso);if(s.length)availability[d.iso]=s.join(', ');});
+  const params=new URLSearchParams({
+    project:CONFIG.project,
+    member:currentMember,
+    data:JSON.stringify(availability),
+    dates:JSON.stringify(CONFIG.dates.map(d=>({iso:d.iso,label:d.label})))
+  });
+  const btn=document.querySelector(".btn-submit");btn.disabled=true;btn.textContent="Submitting…";
+  try{await fetch(CONFIG.scriptUrl+'?'+params.toString(),{method:"GET",mode:"no-cors"});showToast("Submitted ✓","success");}
+  catch{showToast("Error – please try again","error");}
+  btn.textContent="Submit My Availability";btn.disabled=false;
+}
+let tt;function showToast(msg,type=""){const el=document.getElementById("toast");el.textContent=msg;el.className="toast show"+(type?" "+type:"");clearTimeout(tt);tt=setTimeout(()=>{el.className="toast";},3000);}
+loadSelections();render();
+</script>
+</body>
+</html>
