@@ -85,7 +85,7 @@
   .month-section{margin-bottom:20px}
   .month-title{font-size:.82rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;padding:5px 0 7px;border-bottom:2px solid var(--navy);margin-bottom:10px}
   .dates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:8px}
-  .date-card{border-radius:10px;border:2px solid #dde4f2;background:white;overflow:hidden}
+  .date-card{border-radius:10px;border:2px solid #dde4f2;background:white}
   .date-card.full{border-color:var(--green);box-shadow:0 0 0 2px rgba(34,197,94,.18)}
   .date-card.partial{border-color:var(--amber)}
   .card-top{padding:8px 10px 5px;display:flex;justify-content:space-between;align-items:flex-start}
@@ -320,8 +320,8 @@ function setView(mode) {
   viewMode = mode;
   document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
   document.getElementById('btn-cal').classList.toggle('active', mode === 'calendar');
-  document.getElementById('container').style.display    = mode === 'grid'     ? '' : 'none';
-  document.getElementById('cal-container').style.display = mode === 'calendar' ? '' : 'none';
+  document.getElementById('container').style.display    = mode === 'grid'     ? 'block' : 'none';
+  document.getElementById('cal-container').style.display = mode === 'calendar' ? 'block' : 'none';
   if (currentData) rerender();
 }
 
@@ -550,13 +550,19 @@ function renderGrid(data, dateCounts, dateMap, members, filteredDates, perfect) 
 }
 
 // ── Calendar render ──────────────────────────────────────────────────
+function labelToIso(label) {
+  // label is already in m/d/yy format from parseLabel
+  const m = label.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (m) return `20${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  return null;
+}
+
 function renderCalendar(data, dateCounts, dateMap, members, filteredDates) {
   const filteredSet = new Set(filteredDates.map(d => d.raw));
-  // Build a lookup from ISO date string to dateCount entry
+  // Build ISO lookup using d.label (already normalized by parseLabel)
   const isoLookup = {};
   dateCounts.forEach(d => {
-    // raw header may be "Sat Jul 4" etc — parse to ISO
-    const iso = rawToIso(d.raw);
+    const iso = labelToIso(d.label);
     if (iso) isoLookup[iso] = d;
   });
 
@@ -625,28 +631,7 @@ function renderCalendar(data, dateCounts, dateMap, members, filteredDates) {
   document.getElementById('cal-container').innerHTML = html;
 }
 
-// Convert a raw header (various formats) to ISO string
-function rawToIso(raw) {
-  // Already ISO
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  // "Sat Jul 4" or "Tue Aug 18" style
-  const months = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
-  const parts = raw.split(' ');
-  if (parts.length >= 3 && months[parts[1]]) {
-    const m = String(months[parts[1]]).padStart(2,'0');
-    const d = String(parts[2]).padStart(2,'0');
-    return `2026-${m}-${d}`;
-  }
-  // "m/d/yy" style
-  const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
-  if (slashMatch) {
-    const m = String(slashMatch[1]).padStart(2,'0');
-    const d = String(slashMatch[2]).padStart(2,'0');
-    const y = '20' + slashMatch[3];
-    return `${y}-${m}-${d}`;
-  }
-  return null;
-}
+
 </script>
 </body>
 </html>
