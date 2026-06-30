@@ -266,10 +266,10 @@ function abbrevSlot(s) {
 }
 
 // ── Filtering helpers ────────────────────────────────────────────────
-// Returns true if the date passes the current member filter
-// (all selected members must be available, OR no filter active)
+// Returns true if the date passes the current member filter.
+// No selection = show everything. Selecting names = ALL must be available.
 function passesFilter(dateMapEntry) {
-  if (selectedMembers.size === 0) return false; // none selected = show nothing
+  if (selectedMembers.size === 0) return true; // no filter active = show all
   for (const m of selectedMembers) {
     if (!isAvail(dateMapEntry[m])) return false;
   }
@@ -286,7 +286,7 @@ function buildFilterBar(members) {
   const chips = document.getElementById('filter-chips');
   bar.classList.add('visible');
   chips.innerHTML = members.map(m => `
-    <div class="member-chip on" id="chip-${m}" onclick="toggleMember('${m}')">
+    <div class="member-chip" id="chip-${m}" onclick="toggleMember('${m}')">
       <div class="chip-dot"></div>
       <span>${m}</span>
     </div>`).join('');
@@ -421,9 +421,9 @@ async function loadData() {
     currentData = json;
     const members = json.rows.map(r => r.member);
 
-    // Init abbreviations and member filter state
+    // Init abbreviations; start with no filter active (show everything)
     abbrevMap = buildAbbrevMap(members);
-    selectedMembers = new Set(members);
+    selectedMembers = new Set();
     buildFilterBar(members);
 
     if (members.length > 0) {
@@ -483,12 +483,12 @@ function render(data) {
   });
 
   const perfect  = dateCounts.filter(d => d.count === members.length);
-  const filterActive = selectedMembers.size < members.length;
+  const filterActive = selectedMembers.size > 0;
 
   document.getElementById('status').textContent =
     `${currentProject} · ${members.length} response${members.length!==1?'s':''} · ` +
     `${filteredDates.length} date${filteredDates.length!==1?'s':''} shown (≥${threshold} available` +
-    (filterActive ? `, filtered to ${selectedMembers.size} member${selectedMembers.size!==1?'s':''}` : '') +
+    (filterActive ? `, must include: ${[...selectedMembers].join(', ')}` : '') +
     `) · ${perfect.length} with everyone free`;
 
   if (viewMode === 'grid') {
