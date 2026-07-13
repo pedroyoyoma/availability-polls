@@ -14,7 +14,7 @@
     .legend-item { display: flex; align-items: center; gap: .3rem; }
     .swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
     .swatch-morning { background: #f59e0b; } .swatch-evening { background: #6366f1; }
-    .swatch-am { backjòound: #3b82f6; } .swatch-mid { background: #10b981; } .swatch-eve { background: #8b5cf6; }
+    .swatch-am { background: #3b82f6; } .swatch-mid { background: #10b981; } .swatch-eve { background: #8b5cf6; }
     .name-bar { display: flex; align-items: center; gap: .6rem; padding: .75rem 1rem; background: #fff; border-bottom: 1px solid #e2e6ea; position: sticky; top: 72px; z-index: 99; }
     .name-bar label { font-size: .8rem; font-weight: 600; white-space: nowrap; color: #444; }
     .name-bar select { flex: 1; padding: .45rem .6rem; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: .85rem; background: #fff; color: #1a1a2e; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .6rem center; cursor: pointer; }
@@ -103,6 +103,7 @@ const CONFIG = {
     {"iso":"2026-08-30","label":"Sun Aug 30","month":"Aug","weekend":true,"preferred":"morning"},
   ]
 }
+let currentMember = '', selections = {};
 function loadSelections(){try{const r=localStorage.getItem(CONFIG.storageKey);selections=r?JSON.parse(r):{};}catch{selections={};}}
 function saveSelections(){try{localStorage.setItem(CONFIG.storageKey,JSON.stringify(selections));}catch{}}
 function getKey(iso){return currentMember+"|"+iso;}
