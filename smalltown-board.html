@@ -159,7 +159,7 @@ function onClear(){if(!currentMember)return;CONFIG.dates.forEach(d=>delete selec
 async function onSubmit(){
   if(!currentMember){showToast("Please select your name first","error");return;}
   const availability={};
-  CONFIG.dates.forEach(d=>{const s=getSlots(d.iso);if(s.length)availability[d.iso]=s.join(', ');});
+  CONFIG.dates.forEach(d=>{const s=getSlots(d.iso);if(s.length)availability[d.iso]=s;});
   const params=new URLSearchParams({
     project:CONFIG.project,
     member:currentMember,
