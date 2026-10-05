@@ -64,6 +64,7 @@ const CONFIG = {
   storageKey: "mjShaw_fall2026_v1",
   project:    "MJ Shaw Fall 2026",
   members:    ["Maddie & Peter","Bo","Tahm","Mariko","Tommy"],
+  mirror:     {members:["Bo"], project:"Dad Band Jam Fall 2026"},   // Bo's submission is copied to this poll too
   scriptUrl:  "https://script.google.com/macros/s/AKfycbxyVThgmyd0byozws-o8QsLnAjNT9ENOUzAsraRPOOiwG1Je11594NpUgFIj7fnVJxS/exec",
   dates: [
     {"iso":"2026-10-06","label":"Tue Oct 6","month":"Oct","weekend":false,"preferred":"evening"},
@@ -163,7 +164,11 @@ async function onSubmit(){
     dates:JSON.stringify(CONFIG.dates.map(d=>({iso:d.iso,label:d.label})))
   });
   const btn=document.querySelector(".btn-submit");btn.disabled=true;btn.textContent="Submitting…";
-  try{await fetch(CONFIG.scriptUrl+'?'+params.toString(),{method:"GET",mode:"no-cors"});showToast("Submitted ✓","success");}
+  try{
+    await fetch(CONFIG.scriptUrl+'?'+params.toString(),{method:"GET",mode:"no-cors"});
+    const m=CONFIG.mirror;
+    if(m&&m.members.includes(currentMember)){params.set("project",m.project);await fetch(CONFIG.scriptUrl+'?'+params.toString(),{method:"GET",mode:"no-cors"});}
+    showToast("Submitted ✓","success");}
   catch{showToast("Error – please try again","error");}
   btn.textContent="Submit My Availability";btn.disabled=false;
 }
