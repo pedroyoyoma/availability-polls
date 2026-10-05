@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Availability Poll</title>
+  <title>MJ Shaw – Rehearsal Poll</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; padding-bottom: 2rem; }
@@ -26,7 +26,7 @@
     .month-header { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .6rem; }
     .month-name { font-size: 1rem; font-weight: 700; color: #1a1a2e; text-transform: uppercase; letter-spacing: .06em; }
     .month-count { font-size: .7rem; color: #888; font-weight: 500; }
-    .date-card { background: #fff; border-radius: 12px; margin-bottom: .6rem; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); border-left: 4px solid #e2e6ea; transition: box-shadow .2s; }
+    .date-card { background: #fff; border-radius: 12px; margin-bottom: .6rem; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); border-left: 4px solid #e2e6ea; }
     .date-card.morning-pref { border-left-color: #f59e0b; } .date-card.evening-pref { border-left-color: #6366f1; }
     .card-head { display: flex; align-items: center; padding: .55rem .75rem .45rem; gap: .6rem; }
     .day-badge { font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #888; min-width: 28px; }
@@ -44,7 +44,7 @@
     .actions { padding: 1.25rem 1rem .5rem; display: flex; gap: .75rem; }
     .btn-submit { flex: 1; padding: .75rem; border-radius: 12px; border: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; letter-spacing: .02em; transition: opacity .2s, transform .1s; }
     .btn-submit:hover { opacity: .9; } .btn-submit:active { transform: scale(.98); } .btn-submit:disabled { opacity: .45; cursor: default; }
-    .btn-clear { padding: .75rem 1.1rem; border-radius: 12px; border: 1.5px solid #e2e6ea; background: #fff; color: #666; font-size: .85rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+    .btn-clear { padding: .75rem 1.1rem; border-radius: 12px; border: 1.5px solid #e2e6ea; background: #fff; color: #666; font-size: .85rem; font-weight: 600; cursor: pointer; }
     .btn-clear:hover { background: #f8f9fa; }
     .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #1a1a2e; color: #fff; padding: .7rem 1.4rem; border-radius: 99px; font-size: .85rem; font-weight: 600; transition: transform .3s cubic-bezier(.34,1.56,.64,1); z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,.25); }
     .toast.show { transform: translateX(-50%) translateY(0); }
@@ -55,55 +55,70 @@
 <div id="app"></div>
 <div class="toast" id="toast"></div>
 <script>
+// ███████████████████████████████████████████████████████████████████
+// CONFIG — edit only this block
+// ███████████████████████████████████████████████████████████████████
 const CONFIG = {
   title:      "MJ Shaw – Rehearsal Poll",
   subtitle:   "Select your name · tap your available slots · submit",
-  storageKey: "mjShaw_2026_v2",
-  project:    "MJ Shaw",
-  members:    ["Peter","Maddie","Tommy","Bo","Miguel"],
+  storageKey: "mjShaw_fall2026_v1",
+  project:    "MJ Shaw Fall 2026",
+  members:    ["Maddie & Peter","Bo","Tahm","Mariko","Tommy"],
   scriptUrl:  "https://script.google.com/macros/s/AKfycbxyVThgmyd0byozws-o8QsLnAjNT9ENOUzAsraRPOOiwG1Je11594NpUgFIj7fnVJxS/exec",
   dates: [
-    {"iso":"2026-07-13","label":"Mon Jul 13","month":"Jul","weekend":false,"preferred":"evening"},
-    {"iso":"2026-07-16","label":"Thu Jul 16","month":"Jul","weekend":false,"preferred":"evening","note":"after 8pm"},
-    {"iso":"2026-07-18","label":"Sat Jul 18","month":"Jul","weekend":true,"preferred":"morning"},
-    {"iso":"2026-07-20","label":"Mon Jul 20","month":"Jul","weekend":false,"preferred":"evening"},
-    {"iso":"2026-07-21","label":"Tue Jul 21","month":"Jul","weekend":false,"preferred":"evening"},
-    {"iso":"2026-07-23","label":"Thu Jul 23","month":"Jul","weekend":false,"preferred":"evening","note":"after 8pm"},
-    {"iso":"2026-07-24","label":"Fri Jul 24","month":"Jul","weekend":true,"preferred":"morning"},
-    {"iso":"2026-07-25","label":"Sat Jul 25","month":"Jul","weekend":true,"preferred":"morning","note":"until 6pm"},
-    {"iso":"2026-07-26","label":"Sun Jul 26","month":"Jul","weekend":true,"preferred":"morning"},
-    {"iso":"2026-07-27","label":"Mon Jul 27","month":"Jul","weekend":false,"preferred":"evening"},
-    {"iso":"2026-07-28","label":"Tue Jul 28","month":"Jul","weekend":false,"preferred":"evening"},
-    {"iso":"2026-07-30","label":"Thu Jul 30","month":"Jul","weekend":false,"preferred":"evening","note":"after 8pm"},
-    {"iso":"2026-07-31","label":"Fri Jul 31","month":"Jul","weekend":true,"preferred":"morning","note":"until 7pm"},
-    {"iso":"2026-08-01","label":"Sat Aug 1","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-02","label":"Sun Aug 2","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-03","label":"Mon Aug 3","month":"Aug","weekend":false,"preferred":"evening"},
-    {"iso":"2026-08-04","label":"Tue Aug 4","month":"Aug","weekend":false,"preferred":"evening"},
-    {"iso":"2026-08-06","label":"Thu Aug 6","month":"Aug","weekend":false,"preferred":"evening","note":"after 8pm"},
-    {"iso":"2026-08-07","label":"Fri Aug 7","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-08","label":"Sat Aug 8","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-09","label":"Sun Aug 9","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-10","label":"Mon Aug 10","month":"Aug","weekend":false,"preferred":"evening"},
-    {"iso":"2026-08-11","label":"Tue Aug 11","month":"Aug","weekend":false,"preferred":"evening"},
-    {"iso":"2026-08-13","label":"Thu Aug 13","month":"Aug","weekend":false,"preferred":"evening","note":"after 8pm"},
-    {"iso":"2026-08-14","label":"Fri Aug 14","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-15","label":"Sat Aug 15","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-16","label":"Sun Aug 16","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-17","label":"Mon Aug 17","month":"Aug","weekend":false,"preferred":"evening"},
-    {"iso":"2026-08-20","label":"Thu Aug 20","month":"Aug","weekend":false,"preferred":"evening","note":"after 8pm"},
-    {"iso":"2026-08-21","label":"Fri Aug 21","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-22","label":"Sat Aug 22","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-23","label":"Sun Aug 23","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-24","label":"Mon Aug 24","month":"Aug","weekend":false,"preferred":"evening"},
-    {"iso":"2026-08-25","label":"Tue Aug 25","month":"Aug","weekend":false,"preferred":"evening"},
-    {"iso":"2026-08-27","label":"Thu Aug 27","month":"Aug","weekend":false,"preferred":"evening","note":"after 8pm"},
-    {"iso":"2026-08-28","label":"Fri Aug 28","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-29","label":"Sat Aug 29","month":"Aug","weekend":true,"preferred":"morning"},
-    {"iso":"2026-08-30","label":"Sun Aug 30","month":"Aug","weekend":true,"preferred":"morning"},
+    {"iso":"2026-10-06","label":"Tue Oct 6","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-08","label":"Thu Oct 8","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-09","label":"Fri Oct 9","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-10","label":"Sat Oct 10","month":"Oct","weekend":true,"preferred":"morning"},
+    {"iso":"2026-10-11","label":"Sun Oct 11","month":"Oct","weekend":true,"preferred":"morning","note":"until 7pm"},
+    {"iso":"2026-10-12","label":"Mon Oct 12","month":"Oct","weekend":true,"preferred":"morning","note":"holiday \u00b7 all day"},
+    {"iso":"2026-10-15","label":"Thu Oct 15","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-16","label":"Fri Oct 16","month":"Oct","weekend":false,"preferred":"evening","note":"until 8pm"},
+    {"iso":"2026-10-17","label":"Sat Oct 17","month":"Oct","weekend":true,"preferred":"morning"},
+    {"iso":"2026-10-18","label":"Sun Oct 18","month":"Oct","weekend":true,"preferred":"morning","note":"all day possible"},
+    {"iso":"2026-10-19","label":"Mon Oct 19","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-20","label":"Tue Oct 20","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-23","label":"Fri Oct 23","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-24","label":"Sat Oct 24","month":"Oct","weekend":true,"preferred":"morning"},
+    {"iso":"2026-10-25","label":"Sun Oct 25","month":"Oct","weekend":true,"preferred":"morning"},
+    {"iso":"2026-10-26","label":"Mon Oct 26","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-27","label":"Tue Oct 27","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-30","label":"Fri Oct 30","month":"Oct","weekend":false,"preferred":"evening"},
+    {"iso":"2026-10-31","label":"Sat Oct 31","month":"Oct","weekend":true,"preferred":"morning","note":"Halloween"},
+    {"iso":"2026-11-01","label":"Sun Nov 1","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-02","label":"Mon Nov 2","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-03","label":"Tue Nov 3","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-05","label":"Thu Nov 5","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-06","label":"Fri Nov 6","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-07","label":"Sat Nov 7","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-08","label":"Sun Nov 8","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-09","label":"Mon Nov 9","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-10","label":"Tue Nov 10","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-12","label":"Thu Nov 12","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-13","label":"Fri Nov 13","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-14","label":"Sat Nov 14","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-15","label":"Sun Nov 15","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-16","label":"Mon Nov 16","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-17","label":"Tue Nov 17","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-19","label":"Thu Nov 19","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-20","label":"Fri Nov 20","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-11-21","label":"Sat Nov 21","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-22","label":"Sun Nov 22","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-23","label":"Mon Nov 23","month":"Nov","weekend":true,"preferred":"morning","note":"open all day"},
+    {"iso":"2026-11-24","label":"Tue Nov 24","month":"Nov","weekend":true,"preferred":"morning","note":"open all day"},
+    {"iso":"2026-11-25","label":"Wed Nov 25","month":"Nov","weekend":true,"preferred":"morning","note":"open all day"},
+    {"iso":"2026-11-26","label":"Thu Nov 26","month":"Nov","weekend":true,"preferred":"morning","note":"Thanksgiving"},
+    {"iso":"2026-11-27","label":"Fri Nov 27","month":"Nov","weekend":true,"preferred":"morning","note":"open all day"},
+    {"iso":"2026-11-28","label":"Sat Nov 28","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-29","label":"Sun Nov 29","month":"Nov","weekend":true,"preferred":"morning"},
+    {"iso":"2026-11-30","label":"Mon Nov 30","month":"Nov","weekend":false,"preferred":"evening"},
+    {"iso":"2026-12-01","label":"Tue Dec 1","month":"Dec","weekend":false,"preferred":"evening"}
   ]
-}
-let currentMember = '', selections = {};
+};
+// ███████████████████████████████████████████████████████████████████
+// END CONFIG
+// ███████████████████████████████████████████████████████████████████
+let currentMember="",selections={};
 function loadSelections(){try{const r=localStorage.getItem(CONFIG.storageKey);selections=r?JSON.parse(r):{};}catch{selections={};}}
 function saveSelections(){try{localStorage.setItem(CONFIG.storageKey,JSON.stringify(selections));}catch{}}
 function getKey(iso){return currentMember+"|"+iso;}
@@ -119,7 +134,7 @@ function render(){
   else{
     for(const month of mo){const dates=months[month];h+=`<div class="month-section"><div class="month-header"><span class="month-name">${month}</span><span class="month-count">${dates.length}</span></div>`;
       for(const d of dates){const slots=getSlots(d.iso),pc=d.preferred==="morning"?"morning-pref":"evening-pref",dow=new Date(d.iso+"T12:00:00").toLocaleDateString("en-US",{weekday:"short"}).toUpperCase();
-        h+=`<div class="date-card ${pc}"><div class="card-head"><span class="day-badge">${dow}</span><span class="date-label">${d.label}${d.preferred==="morning"?' <span class="pref-icon">☀</span>':""}</span>${d.note?`<span class="note-badge">${d.note}</span>`:""}</div><div class="card-body">`;
+        h+=`<div class="date-card ${pc}"><div class="card-head"><span class="day-badge">${dow}</span><span class="date-label">${d.label}${d.preferred==="morning"?' <span class="pref-icon">&#9728;</span>':""}</span>${d.note?`<span class="note-badge">${d.note}</span>`:""}</div><div class="card-body">`;
         if(d.weekend){for(const s of["AM","Midday","Evening","All Day"])h+=`<button class="slot-btn${slots.includes(s)?" active":""}" data-slot="${s}" data-iso="${d.iso}" onclick="onSlot('${d.iso}','${s}')">${s}</button>`;}
         else{h+=`<span class="weekday-label">Weekday</span><button class="slot-btn${slots.includes("Evening")?" active":""}" data-slot="Evening" data-iso="${d.iso}" onclick="onSlot('${d.iso}','Evening')">Eve</button>`;}
         h+=`</div></div>`;}h+=`</div>`;}
@@ -139,10 +154,16 @@ function onSlot(iso,slot){
 function onClear(){if(!currentMember)return;CONFIG.dates.forEach(d=>delete selections[getKey(d.iso)]);saveSelections();render();}
 async function onSubmit(){
   if(!currentMember){showToast("Please select your name first","error");return;}
-  const payload={project:CONFIG.project,member:currentMember,responses:{}};
-  CONFIG.dates.forEach(d=>{const s=getSlots(d.iso);if(s.length)payload.responses[d.iso]=s;});
+  const availability={};
+  CONFIG.dates.forEach(d=>{const s=getSlots(d.iso);if(s.length)availability[d.iso]=s.join(', ');});
+  const params=new URLSearchParams({
+    project:CONFIG.project,
+    member:currentMember,
+    data:JSON.stringify(availability),
+    dates:JSON.stringify(CONFIG.dates.map(d=>({iso:d.iso,label:d.label})))
+  });
   const btn=document.querySelector(".btn-submit");btn.disabled=true;btn.textContent="Submitting…";
-  try{await fetch(CONFIG.scriptUrl,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});showToast("Submitted ✓","success");}
+  try{await fetch(CONFIG.scriptUrl+'?'+params.toString(),{method:"GET",mode:"no-cors"});showToast("Submitted ✓","success");}
   catch{showToast("Error – please try again","error");}
   btn.textContent="Submit My Availability";btn.disabled=false;
 }
